@@ -6,6 +6,7 @@ import io.ktor.client.request.*
 import io.ktor.client.features.json.JsonFeature
 import io.ktor.client.features.json.serializer.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
 import kotlin.native.SharedImmutable
@@ -50,12 +51,15 @@ fun fetchBackground(url: String) {
     println(mailbox.value)
 }
 
+@Serializable
 data class UserId(val userId: String, val id: Int, val title: String, val completed: Boolean)
 
 fun fetchObject(url: String) = runBlocking {
     val client = HttpClient() {
         install(JsonFeature) {
-            serializer = KotlinxSerializer()
+            serializer = KotlinxSerializer().apply {
+                register(UserId.serializer())
+            }
         }
     }
     val result = client.get<UserId>(url)
