@@ -3,6 +3,8 @@ package sample
 import io.ktor.client.*
 import io.ktor.client.engine.curl.Curl
 import io.ktor.client.request.*
+import io.ktor.client.features.json.JsonFeature
+import io.ktor.client.features.json.serializer.KotlinxSerializer
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.*
@@ -41,13 +43,28 @@ fun fetchBackground(url: String) {
         } catch (e: SerializationException) {
             JsonPrimitive("<error: ${e.message}>")
         }).freeze()
+        client.close()
         "OK"
     }
     println(future.result)
     println(mailbox.value)
 }
 
+data class UserId(val userId: String, val id: Int, val title: String, val completed: Boolean)
+
+fun fetchObject(url: String) = runBlocking {
+    val client = HttpClient() {
+        install(JsonFeature) {
+            serializer = KotlinxSerializer()
+        }
+    }
+    val result = client.get<UserId>(url)
+    println("result : $result")
+    client.close()
+}
+
 fun main() {
     fetchSimple("https://jsonplaceholder.typicode.com/todos/1")
-    fetchBackground("https://jsonplaceholder.typicode.com/todos/2")
+    //fetchBackground("https://jsonplaceholder.typicode.com/todos/2")
+    fetchObject("https://jsonplaceholder.typicode.com/todos/3")
 }
